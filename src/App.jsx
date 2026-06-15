@@ -1,128 +1,101 @@
-import React, { useState, useCallback, useRef } from 'react'
-import { getCameraCheck, getThreeMoves } from './api'
+import { useState, useEffect, useCallback } from 'react';
+import ProgressDots from './components/ProgressDots.jsx';
+import Step0 from './steps/Step0.jsx';
+import Step1 from './steps/Step1.jsx';
+import Step2 from './steps/Step2.jsx';
+import Step3 from './steps/Step3.jsx';
+import Step4 from './steps/Step4.jsx';
+import Step5 from './steps/Step5.jsx';
+import Step6 from './steps/Step6.jsx';
+import Step7 from './steps/Step7.jsx';
+import Step8 from './steps/Step8.jsx';
+import Step9 from './steps/Step9.jsx';
+import Step10 from './steps/Step10.jsx';
+import { getCameraCheck } from './api.js';
 
-import Step1WhatHappened from './steps/Step1WhatHappened'
-import Step2Relationship from './steps/Step2Relationship'
-import Step3YourFeelings from './steps/Step3YourFeelings'
-import Step4Pattern from './steps/Step4Pattern'
-import Step5TheirFeelings from './steps/Step5TheirFeelings'
-import Step6ReachedOut from './steps/Step6ReachedOut'
-import Step7Pause from './steps/Step7Pause'
-import Step8CameraCheck from './steps/Step8CameraCheck'
-import Step9WhatMatters from './steps/Step9WhatMatters'
-import Step10DesiredOutcome from './steps/Step10DesiredOutcome'
-import Step11ThreeMoves from './steps/Step11ThreeMoves'
+const TOTAL_STEPS = 11;
 
 const initialData = {
   whatHappened: '',
   heatLevel: 5,
   relationship: '',
-  userFeelingsText: '',
-  userFeelingTags: [],
-  pattern: '',
-  theirFeelingsText: '',
-  theirFeelingTags: [],
+  myFeelings: [],
+  myFeelingsNote: '',
+  familiarity: '',
+  theirFeelings: [],
+  theirFeelingsNote: '',
   reachedOut: '',
   whatMatters: '',
   desiredOutcome: '',
-}
+};
 
 export default function App() {
-  const [step, setStep] = useState(0)
-  const [data, setData] = useState(initialData)
-  const [cameraCheck, setCameraCheck] = useState('')
-  const [cameraLoading, setCameraLoading] = useState(false)
-  const [cameraError, setCameraError] = useState(false)
-  const [movesText, setMovesText] = useState('')
-  const [movesLoading, setMovesLoading] = useState(false)
-  const [movesError, setMovesError] = useState(false)
-  const cameraFiredRef = useRef(false)
+  const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState(initialData);
+  const [cameraCheck, setCameraCheck] = useState('');
+  const [cameraCheckLoading, setCameraCheckLoading] = useState(false);
 
-  const update = useCallback(patch => setData(d => ({ ...d, ...patch })), [])
-
-  function next() {
-    setStep(s => s + 1)
-    window.scrollTo(0, 0)
+  function handleChange(key, value) {
+    setFormData(prev => ({ ...prev, [key]: value }));
   }
 
-  function handlePauseDone() {
-    if (!cameraFiredRef.current) {
-      cameraFiredRef.current = true
-      setCameraLoading(true)
-      setCameraError(false)
-      getCameraCheck(data)
+  function nextStep() {
+    setStep(s => s + 1);
+  }
+
+  // Step 6 (index 6) is the pause screen — fires API call #1
+  useEffect(() => {
+    if (step === 6) {
+      setCameraCheckLoading(true);
+      getCameraCheck(formData)
         .then(result => {
-          setCameraCheck(result)
-          setCameraLoading(false)
+          setCameraCheck(result);
+          setCameraCheckLoading(false);
         })
-        .catch(() => {
-          setCameraError(true)
-          setCameraLoading(false)
-        })
+        .catch(err => {
+          console.error(err);
+          setCameraCheck('Unable to load camera check. Please try again.');
+          setCameraCheckLoading(false);
+        });
     }
-    next()
+  }, [step]);
+
+  function handleRestart() {
+    setStep(0);
+    setFormData(initialData);
+    setCameraCheck('');
+    setCameraCheckLoading(false);
   }
 
-  function handleStartMoves() {
-    setMovesText('')
-    setMovesLoading(true)
-    setMovesError(false)
-    setStep(10)
-    window.scrollTo(0, 0)
+  const step6Next = useCallback(() => {
+    setStep(7);
+  }, []);
 
-    getThreeMoves(data, cameraCheck, chunk => {
-      setMovesText(t => t + chunk)
-    })
-      .then(() => setMovesLoading(false))
-      .catch(() => {
-        setMovesError(true)
-        setMovesLoading(false)
-      })
-  }
+  return (
+    <div className="app">
+      <header className="app-header">
+        <span className="app-logo">Defuse</span>
+      </header>
 
-  function restart() {
-    setStep(0)
-    setData(initialData)
-    setCameraCheck('')
-    setCameraError(false)
-    setMovesText('')
-    setMovesError(false)
-    cameraFiredRef.current = false
-    window.scrollTo(0, 0)
-  }
+      <ProgressDots current={step} total={TOTAL_STEPS} />
 
-  switch (step) {
-    case 0: return <Step1WhatHappened data={data} update={update} onNext={next} />
-    case 1: return <Step2Relationship data={data} update={update} onNext={next} />
-    case 2: return <Step3YourFeelings data={data} update={update} onNext={next} />
-    case 3: return <Step4Pattern data={data} update={update} onNext={next} />
-    case 4: return <Step5TheirFeelings data={data} update={update} onNext={next} />
-    case 5: return <Step6ReachedOut data={data} update={update} onNext={next} />
-    case 6: return <Step7Pause onDone={handlePauseDone} />
-    case 7: return (
-      <Step8CameraCheck
-        cameraCheck={cameraCheck}
-        loading={cameraLoading}
-        error={cameraError}
-        onNext={next}
-      />
-    )
-    case 8: return <Step9WhatMatters data={data} update={update} onNext={next} />
-    case 9: return (
-      <Step10DesiredOutcome
-        data={data}
-        update={update}
-        onNext={handleStartMoves}
-      />
-    )
-    case 10: return (
-      <Step11ThreeMoves
-        movesText={movesText}
-        loading={movesLoading}
-        error={movesError}
-        onRestart={restart}
-      />
-    )
-    default: return null
-  }
+      {step === 0 && <Step0 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 1 && <Step1 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 2 && <Step2 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 3 && <Step3 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 4 && <Step4 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 5 && <Step5 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 6 && <Step6 onNext={step6Next} />}
+      {step === 7 && <Step7 cameraCheck={cameraCheck} onNext={nextStep} />}
+      {step === 8 && <Step8 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 9 && <Step9 data={formData} onChange={handleChange} onNext={nextStep} />}
+      {step === 10 && (
+        <Step10
+          data={formData}
+          cameraCheck={cameraCheck}
+          onRestart={handleRestart}
+        />
+      )}
+    </div>
+  );
 }
