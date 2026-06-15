@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react';
 
 function getSliderBg(value) {
   const pct = ((value - 1) / 9) * 100;
-  // Gradient: green at 0%, yellow at 50%, red at 100%
   return `linear-gradient(to right, #4caf50 0%, #ffeb3b 50%, #e53935 100%)`;
 }
 

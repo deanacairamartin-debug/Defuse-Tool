@@ -160,7 +160,6 @@ textarea:focus {
   border-color: var(--text-muted);
 }
 
-/* SingleSelect */
 .single-select {
   display: flex;
   flex-direction: column;
@@ -193,7 +192,6 @@ textarea:focus {
   color: #fff;
 }
 
-/* FeelingTags */
 .feeling-tags {
   display: flex;
   flex-wrap: wrap;
@@ -225,7 +223,6 @@ textarea:focus {
   color: #fff;
 }
 
-/* HeatSlider */
 .heat-slider-container {
   margin-bottom: 32px;
 }
@@ -278,7 +275,6 @@ textarea:focus {
   color: var(--text);
 }
 
-/* ProgressDots */
 .progress-dots {
   display: flex;
   gap: 6px;
@@ -303,7 +299,6 @@ textarea:focus {
   background: var(--text-muted);
 }
 
-/* Spinner */
 .spinner {
   width: 40px;
   height: 40px;
@@ -317,7 +312,6 @@ textarea:focus {
   to { transform: rotate(360deg); }
 }
 
-/* Pause screen */
 .pause-screen {
   flex: 1;
   display: flex;
@@ -336,7 +330,6 @@ textarea:focus {
   margin-bottom: 40px;
 }
 
-/* Camera check */
 .camera-check-text {
   font-size: 1.05rem;
   line-height: 1.8;
@@ -348,7 +341,6 @@ textarea:focus {
   margin-bottom: 32px;
 }
 
-/* Three moves */
 .moves-container {
   display: flex;
   flex-direction: column;

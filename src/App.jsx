@@ -43,7 +43,6 @@ export default function App() {
     setStep(s => s + 1);
   }
 
-  // Step 6 (index 6) is the pause screen — fires API call #1
   useEffect(() => {
     if (step === 6) {
       setCameraCheckLoading(true);

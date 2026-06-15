@@ -3,7 +3,6 @@ import { getThreeMoves } from '../api.js';
 import Spinner from '../components/Spinner.jsx';
 
 function parseMoves(text) {
-  // Parse "Move N: Title\nBody" format
   const moveRegex = /Move (\d+):\s*([^\n]+)\n([\s\S]*?)(?=Move \d+:|$)/g;
   const moves = [];
   let match;
