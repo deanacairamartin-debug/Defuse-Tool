@@ -51,16 +51,15 @@ export default function Step10({ data, cameraCheck, onRestart }) {
         </div>
       )}
 
-      {!done && !error && (
-        <div>
-          <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Spinner />
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Working through this...</span>
-          </div>
-          {streamedText && (
-            <div className="streaming-text">{streamedText}</div>
-          )}
+      {!done && !error && !streamedText && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Spinner />
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Working through this...</span>
         </div>
+      )}
+
+      {!done && !error && streamedText && (
+        <div className="streaming-text">{streamedText}</div>
       )}
 
       {done && moves.length > 0 && (

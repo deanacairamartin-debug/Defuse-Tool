@@ -17,11 +17,7 @@ export default function Step4({ data, onChange, onNext }) {
         rows={3}
         style={{ minHeight: '80px' }}
       />
-      <button
-        className="btn btn-primary"
-        onClick={onNext}
-        disabled={(data.theirFeelings || []).length === 0 && !data.theirFeelingsNote?.trim()}
-      >
+      <button className="btn btn-primary" onClick={onNext}>
         Continue
       </button>
     </div>

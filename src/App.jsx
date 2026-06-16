@@ -34,6 +34,7 @@ export default function App() {
   const [formData, setFormData] = useState(initialData);
   const [cameraCheck, setCameraCheck] = useState('');
   const [cameraCheckLoading, setCameraCheckLoading] = useState(false);
+  const [cameraCheckError, setCameraCheckError] = useState(false);
 
   function handleChange(key, value) {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -46,6 +47,7 @@ export default function App() {
   useEffect(() => {
     if (step === 6) {
       setCameraCheckLoading(true);
+      setCameraCheckError(false);
       getCameraCheck(formData)
         .then(result => {
           setCameraCheck(result);
@@ -53,7 +55,7 @@ export default function App() {
         })
         .catch(err => {
           console.error(err);
-          setCameraCheck('Unable to load camera check. Please try again.');
+          setCameraCheckError(true);
           setCameraCheckLoading(false);
         });
     }
@@ -64,6 +66,7 @@ export default function App() {
     setFormData(initialData);
     setCameraCheck('');
     setCameraCheckLoading(false);
+    setCameraCheckError(false);
   }
 
   const step6Next = useCallback(() => {
@@ -85,7 +88,7 @@ export default function App() {
       {step === 4 && <Step4 data={formData} onChange={handleChange} onNext={nextStep} />}
       {step === 5 && <Step5 data={formData} onChange={handleChange} onNext={nextStep} />}
       {step === 6 && <Step6 onNext={step6Next} />}
-      {step === 7 && <Step7 cameraCheck={cameraCheck} onNext={nextStep} />}
+      {step === 7 && <Step7 cameraCheck={cameraCheck} loading={cameraCheckLoading} error={cameraCheckError} onNext={nextStep} />}
       {step === 8 && <Step8 data={formData} onChange={handleChange} onNext={nextStep} />}
       {step === 9 && <Step9 data={formData} onChange={handleChange} onNext={nextStep} />}
       {step === 10 && (
