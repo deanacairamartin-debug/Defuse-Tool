@@ -1,77 +1,105 @@
-import { useState, useEffect, useCallback } from 'react';
-import ProgressDots from './components/ProgressDots.jsx';
-import Step0 from './steps/Step0.jsx';
-import Step1 from './steps/Step1.jsx';
-import Step2 from './steps/Step2.jsx';
-import Step3 from './steps/Step3.jsx';
-import Step4 from './steps/Step4.jsx';
-import Step5 from './steps/Step5.jsx';
-import Step6 from './steps/Step6.jsx';
-import Step7 from './steps/Step7.jsx';
-import Step8 from './steps/Step8.jsx';
-import Step9 from './steps/Step9.jsx';
-import Step10 from './steps/Step10.jsx';
-import { getCameraCheck } from './api.js';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Screen1 from './steps/Screen1.jsx';
+import Screen2 from './steps/Screen2.jsx';
+import Screen3 from './steps/Screen3.jsx';
+import Screen4 from './steps/Screen4.jsx';
+import Screen5 from './steps/Screen5.jsx';
+import ScreenBreath from './steps/ScreenBreath.jsx';
+import Screen6 from './steps/Screen6.jsx';
+import Screen7 from './steps/Screen7.jsx';
+import Screen8 from './steps/Screen8.jsx';
+import { getReality, getTruth, getNextMove } from './api.js';
 
-const TOTAL_STEPS = 11;
+// screens: 1-5 input, 'breath', 6-8 output
+const SCREENS = ['1','2','3','4','5','breath','6','7','8'];
+const TOTAL = SCREENS.length;
 
-const initialData = {
-  whatHappened: '',
-  heatLevel: 5,
-  relationship: '',
-  myFeelings: [],
-  myFeelingsNote: '',
-  familiarity: '',
-  theirFeelings: [],
-  theirFeelingsNote: '',
-  reachedOut: '',
-  whatMatters: '',
-  desiredOutcome: '',
+const init = {
+  s1text: '', s1tags: [],
+  s2who: '',
+  s3text: '', s3tags: [],
+  s4pattern: '',
+  s5text: '',
 };
 
 export default function App() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState(initialData);
-  const [cameraCheck, setCameraCheck] = useState('');
-  const [cameraCheckLoading, setCameraCheckLoading] = useState(false);
-  const [cameraCheckError, setCameraCheckError] = useState(false);
+  const [screenIdx, setScreenIdx] = useState(0);
+  const [data, setData] = useState(init);
 
-  function handleChange(key, value) {
-    setFormData(prev => ({ ...prev, [key]: value }));
+  const [reality, setReality] = useState('');
+  const [realityLoading, setRealityLoading] = useState(false);
+  const [realityError, setRealityError] = useState(false);
+
+  const [truth, setTruth] = useState('');
+  const [truthLoading, setTruthLoading] = useState(false);
+  const [truthError, setTruthError] = useState(false);
+
+  const [movesText, setMovesText] = useState('');
+  const [movesLoading, setMovesLoading] = useState(false);
+  const [movesError, setMovesError] = useState(false);
+
+  const firedRef = useRef({ reality: false, truth: false, moves: false });
+
+  function change(key, val) {
+    setData(d => ({ ...d, [key]: val }));
   }
 
-  function nextStep() {
-    setStep(s => s + 1);
+  function next() {
+    setScreenIdx(i => i + 1);
+    window.scrollTo(0, 0);
   }
 
-  useEffect(() => {
-    if (step === 6) {
-      setCameraCheckLoading(true);
-      setCameraCheckError(false);
-      getCameraCheck(formData)
-        .then(result => {
-          setCameraCheck(result);
-          setCameraCheckLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setCameraCheckError(true);
-          setCameraCheckLoading(false);
-        });
+  const handleBreathDone = useCallback(() => {
+    if (!firedRef.current.reality) {
+      firedRef.current.reality = true;
+      setRealityLoading(true);
+      setRealityError(false);
+      getReality(data)
+        .then(text => { setReality(text); setRealityLoading(false); })
+        .catch(() => { setRealityError(true); setRealityLoading(false); });
     }
-  }, [step]);
+    next();
+  }, [data]);
 
-  function handleRestart() {
-    setStep(0);
-    setFormData(initialData);
-    setCameraCheck('');
-    setCameraCheckLoading(false);
-    setCameraCheckError(false);
+  function handleScreen6Next() {
+    if (!firedRef.current.truth) {
+      firedRef.current.truth = true;
+      setTruthLoading(true);
+      setTruthError(false);
+      getTruth({ ...data, reality })
+        .then(text => { setTruth(text); setTruthLoading(false); })
+        .catch(() => { setTruthError(true); setTruthLoading(false); });
+    }
+    next();
   }
 
-  const step6Next = useCallback(() => {
-    setStep(7);
-  }, []);
+  function handleScreen7Next() {
+    if (!firedRef.current.moves) {
+      firedRef.current.moves = true;
+      setMovesLoading(true);
+      setMovesError(false);
+      getNextMove({ ...data, reality, truth }, chunk => {
+        setMovesText(t => t + chunk);
+      })
+        .then(() => setMovesLoading(false))
+        .catch(() => { setMovesError(true); setMovesLoading(false); });
+    }
+    next();
+  }
+
+  function restart() {
+    setScreenIdx(0);
+    setData(init);
+    setReality(''); setRealityLoading(false); setRealityError(false);
+    setTruth(''); setTruthLoading(false); setTruthError(false);
+    setMovesText(''); setMovesLoading(false); setMovesError(false);
+    firedRef.current = { reality: false, truth: false, moves: false };
+    window.scrollTo(0, 0);
+  }
+
+  const screen = SCREENS[screenIdx];
+  const isBreath = screen === 'breath';
+  const dotCount = TOTAL;
 
   return (
     <div className="app">
@@ -79,23 +107,43 @@ export default function App() {
         <span className="app-logo">Defuse</span>
       </header>
 
-      <ProgressDots current={step} total={TOTAL_STEPS} />
+      <div className="progress-dots">
+        {Array.from({ length: dotCount }).map((_, i) => (
+          <div
+            key={i}
+            className={`progress-dot ${i === screenIdx ? 'active' : i < screenIdx ? 'done' : ''}`}
+          />
+        ))}
+      </div>
 
-      {step === 0 && <Step0 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 1 && <Step1 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 2 && <Step2 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 3 && <Step3 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 4 && <Step4 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 5 && <Step5 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 6 && <Step6 onNext={step6Next} />}
-      {step === 7 && <Step7 cameraCheck={cameraCheck} loading={cameraCheckLoading} error={cameraCheckError} onNext={nextStep} />}
-      {step === 8 && <Step8 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 9 && <Step9 data={formData} onChange={handleChange} onNext={nextStep} />}
-      {step === 10 && (
-        <Step10
-          data={formData}
-          cameraCheck={cameraCheck}
-          onRestart={handleRestart}
+      {screen === '1' && <Screen1 data={data} onChange={change} onNext={next} />}
+      {screen === '2' && <Screen2 data={data} onChange={change} onNext={next} />}
+      {screen === '3' && <Screen3 data={data} onChange={change} onNext={next} />}
+      {screen === '4' && <Screen4 data={data} onChange={change} onNext={next} />}
+      {screen === '5' && <Screen5 data={data} onChange={change} onNext={next} />}
+      {screen === 'breath' && <ScreenBreath onDone={handleBreathDone} />}
+      {screen === '6' && (
+        <Screen6
+          reality={reality}
+          loading={realityLoading}
+          error={realityError}
+          onNext={handleScreen6Next}
+        />
+      )}
+      {screen === '7' && (
+        <Screen7
+          truth={truth}
+          loading={truthLoading}
+          error={truthError}
+          onNext={handleScreen7Next}
+        />
+      )}
+      {screen === '8' && (
+        <Screen8
+          movesText={movesText}
+          loading={movesLoading}
+          error={movesError}
+          onRestart={restart}
         />
       )}
     </div>

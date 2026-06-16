@@ -1,29 +1,32 @@
-export async function getCameraCheck(formData) {
-  const res = await fetch('/api/camera-check', {
+export async function getReality(inputs) {
+  const res = await fetch('/api/reality', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
+    body: JSON.stringify(inputs),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Request failed: ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error(`reality API failed: ${res.status}`);
   const data = await res.json();
   return data.text;
 }
 
-export async function getThreeMoves(formData, cameraCheck, onChunk) {
-  const res = await fetch('/api/three-moves', {
+export async function getTruth(inputs) {
+  const res = await fetch('/api/truth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ formData, cameraCheck }),
+    body: JSON.stringify(inputs),
   });
+  if (!res.ok) throw new Error(`truth API failed: ${res.status}`);
+  const data = await res.json();
+  return data.text;
+}
 
-  if (!res.ok) {
-    throw new Error(`Request failed: ${res.status}`);
-  }
+export async function getNextMove(inputs, onChunk) {
+  const res = await fetch('/api/next-move', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(inputs),
+  });
+  if (!res.ok) throw new Error(`next-move API failed: ${res.status}`);
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -32,11 +35,9 @@ export async function getThreeMoves(formData, cameraCheck, onChunk) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n');
     buffer = lines.pop();
-
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const payload = line.slice(6).trim();
@@ -46,7 +47,8 @@ export async function getThreeMoves(formData, cameraCheck, onChunk) {
         if (parsed.error) throw new Error(parsed.error);
         if (parsed.text) onChunk(parsed.text);
       } catch (e) {
-        if (e.message !== 'Unexpected end of JSON input') throw e;
+        if (e.message.includes('JSON')) continue;
+        throw e;
       }
     }
   }
