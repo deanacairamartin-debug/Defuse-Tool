@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Screen1 from './steps/Screen1.jsx';
 import Screen2 from './steps/Screen2.jsx';
 import Screen3 from './steps/Screen3.jsx';
@@ -8,11 +8,13 @@ import ScreenBreath from './steps/ScreenBreath.jsx';
 import Screen6 from './steps/Screen6.jsx';
 import Screen7 from './steps/Screen7.jsx';
 import Screen8 from './steps/Screen8.jsx';
+import Screen9 from './steps/Screen9.jsx';
 import { getReality, getTruth, getNextMove } from './api.js';
+import { buildDots, screenAccent } from './utils/color.js';
 
-// screens: 1-5 input, 'breath', 6-8 output
-const SCREENS = ['1','2','3','4','5','breath','6','7','8'];
+const SCREENS = ['1','2','3','4','5','breath','6','7','8','9'];
 const TOTAL = SCREENS.length;
+const DOT_INDEX = { '1':0, '2':1, '3':2, '4':3, '5':4, 'breath':5, '6':6, '7':7, '8':8, '9':9 };
 
 const init = {
   s1text: '', s1tags: [],
@@ -37,6 +39,8 @@ export default function App() {
   const [movesText, setMovesText] = useState('');
   const [movesLoading, setMovesLoading] = useState(false);
   const [movesError, setMovesError] = useState(false);
+
+  const [pickedMove, setPickedMove] = useState(null);
 
   const firedRef = useRef({ reality: false, truth: false, moves: false });
 
@@ -93,25 +97,36 @@ export default function App() {
     setReality(''); setRealityLoading(false); setRealityError(false);
     setTruth(''); setTruthLoading(false); setTruthError(false);
     setMovesText(''); setMovesLoading(false); setMovesError(false);
+    setPickedMove(null);
     firedRef.current = { reality: false, truth: false, moves: false };
     window.scrollTo(0, 0);
   }
 
   const screen = SCREENS[screenIdx];
-  const isBreath = screen === 'breath';
-  const dotCount = TOTAL;
+  const dotIdx = DOT_INDEX[screen] ?? screenIdx;
+  const accent = screenAccent(dotIdx);
+  const dots = buildDots(dotIdx, TOTAL);
 
   return (
-    <div className="app">
+    <div
+      className="app"
+      style={{ '--screen-accent': accent.rgb, '--screen-accent-rgb': `${accent.r},${accent.g},${accent.b}` }}
+    >
+      <div
+        className="screen-glow"
+        style={{ background: `radial-gradient(circle, rgba(${accent.r},${accent.g},${accent.b},0.22), transparent 70%)` }}
+      />
+
       <header className="app-header">
-        <span className="app-logo">Defuse</span>
+        <span className="app-logo">DEFUSE</span>
       </header>
 
       <div className="progress-dots">
-        {Array.from({ length: dotCount }).map((_, i) => (
+        {dots.map((d, i) => (
           <div
             key={i}
-            className={`progress-dot ${i === screenIdx ? 'active' : i < screenIdx ? 'done' : ''}`}
+            className="progress-dot"
+            style={{ background: d.color, opacity: d.opacity, boxShadow: d.glow }}
           />
         ))}
       </div>
@@ -135,6 +150,7 @@ export default function App() {
           truth={truth}
           loading={truthLoading}
           error={truthError}
+          s4pattern={data.s4pattern}
           onNext={handleScreen7Next}
         />
       )}
@@ -143,6 +159,17 @@ export default function App() {
           movesText={movesText}
           loading={movesLoading}
           error={movesError}
+          s4pattern={data.s4pattern}
+          pickedMove={pickedMove}
+          onPickMove={setPickedMove}
+          onNext={next}
+          onRestart={restart}
+        />
+      )}
+      {screen === '9' && (
+        <Screen9
+          truth={truth}
+          pickedMove={pickedMove}
           onRestart={restart}
         />
       )}

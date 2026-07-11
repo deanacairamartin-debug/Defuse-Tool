@@ -1,3 +1,5 @@
+import SlamTitle from '../components/SlamTitle.jsx';
+
 const TAGS = ['Disrespected', 'Blindsided', 'Used', 'Humiliated', 'Betrayed', 'Ignored', 'Lied to', 'Embarrassed', 'Furious'];
 
 export default function Screen1({ data, onChange, onNext }) {
@@ -8,12 +10,14 @@ export default function Screen1({ data, onChange, onNext }) {
 
   return (
     <div className="screen">
-      <div className="screen-title">What set you off?</div>
+      <div className="screen-eyebrow" style={{ color: 'var(--screen-accent)' }}>WHAT SET YOU OFF</div>
+      <SlamTitle flashColor="rgba(229,52,42,0.3)">WHAT SET YOU OFF?</SlamTitle>
+      <p className="screen-subtitle">Tell it straight. No filter.</p>
 
       <textarea
         value={data.s1text || ''}
         onChange={e => onChange('s1text', e.target.value)}
-        placeholder={"He didn't text back last night. Saw him active on IG. Morning comes — radio silence."}
+        placeholder="He didn't text back last night. Saw him active on IG. Morning comes — radio silence."
         rows={6}
       />
 
@@ -22,7 +26,7 @@ export default function Screen1({ data, onChange, onNext }) {
           <button
             key={t}
             type="button"
-            className={`feeling-tag ${(data.s1tags || []).includes(t) ? 'selected' : ''}`}
+            className={`feeling-tag${(data.s1tags || []).includes(t) ? ' selected' : ''}`}
             onClick={() => toggleTag(t)}
           >{t}</button>
         ))}

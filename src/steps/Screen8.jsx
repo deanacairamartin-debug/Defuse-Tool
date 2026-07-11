@@ -1,3 +1,5 @@
+import SlamTitle from '../components/SlamTitle.jsx';
+
 function parseMoves(text) {
   const labels = ['Conservative', 'Moderate', 'Aggressive'];
   const moves = [];
@@ -9,14 +11,29 @@ function parseMoves(text) {
   return moves;
 }
 
-export default function Screen8({ movesText, loading, error, onRestart }) {
-  const moves = !loading && movesText ? parseMoves(movesText) : [];
+function leadLabel(s4pattern) {
+  if (!s4pattern || s4pattern === 'First time') return 'Conservative';
+  if (s4pattern === 'Happens sometimes') return 'Moderate';
+  return 'Aggressive';
+}
+
+function orderMoves(moves, lead) {
+  const idx = moves.findIndex(m => m.label === lead);
+  if (idx <= 0) return moves;
+  return [moves[idx], ...moves.slice(0, idx), ...moves.slice(idx + 1)];
+}
+
+export default function Screen8({ movesText, loading, error, s4pattern, pickedMove, onPickMove, onNext, onRestart }) {
+  const rawMoves = !loading && movesText ? parseMoves(movesText) : [];
+  const lead = leadLabel(s4pattern);
+  const moves = orderMoves(rawMoves, lead);
+  const canContinue = !loading && moves.length > 0 && pickedMove;
 
   return (
     <div className="screen">
-      <div className="screen-eyebrow">Your options</div>
-      <div className="screen-title">Your next move.</div>
-      <div className="screen-subtitle">Three options. Pick your temperature.</div>
+      <div className="screen-eyebrow" style={{ color: 'var(--screen-accent)' }}>YOUR OPTIONS</div>
+      <SlamTitle flashColor="rgba(30,79,163,0.28)">YOUR MOVE.</SlamTitle>
+      <p className="screen-subtitle">Three options. Pick your temperature.</p>
 
       {loading && !movesText && (
         <div className="output-loading">
@@ -33,17 +50,35 @@ export default function Screen8({ movesText, loading, error, onRestart }) {
 
       {!loading && moves.length > 0 && (
         <div className="moves-list">
-          {moves.map(m => (
-            <div key={m.label} className="move-card">
-              <div className="move-label">{m.label}</div>
-              <div className="move-text">{m.text}</div>
-            </div>
-          ))}
+          {moves.map(m => {
+            const isLead = m.label === lead;
+            const isSelected = pickedMove === m.label;
+            return (
+              <div
+                key={m.label}
+                className={`move-card${isLead ? ' move-lead' : ''}${isSelected ? ' move-selected' : ''}`}
+                onClick={() => onPickMove(m.label)}
+              >
+                <div className={`move-label ${isLead ? 'move-label-accent' : 'move-label-muted'}`}>{m.label}</div>
+                <div className="move-text">{m.text}</div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {!loading && !error && movesText && moves.length === 0 && (
+      {!loading && movesText && moves.length === 0 && (
         <div className="output-block">{movesText}</div>
+      )}
+
+      {!loading && moves.length > 0 && (
+        <button
+          className="btn btn-primary"
+          onClick={onNext}
+          disabled={!canContinue}
+        >
+          {canContinue ? `Keep this — ${pickedMove}` : 'Pick one to continue'}
+        </button>
       )}
 
       {!loading && (

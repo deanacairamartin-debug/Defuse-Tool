@@ -1,3 +1,5 @@
+import SlamTitle from '../components/SlamTitle.jsx';
+
 const TAGS = ['Justified', 'Paranoid', 'Confused', 'Certain', 'Spiraling', 'Numb', 'Vindictive'];
 
 export default function Screen3({ data, onChange, onNext }) {
@@ -8,13 +10,14 @@ export default function Screen3({ data, onChange, onNext }) {
 
   return (
     <div className="screen">
-      <div className="screen-title">Spinning a story?</div>
-      <div className="screen-subtitle">What do you believe this means?</div>
+      <div className="screen-eyebrow" style={{ color: 'var(--screen-accent)' }}>SPINNING A STORY</div>
+      <SlamTitle flashColor="rgba(170,60,40,0.25)">SPINNING A STORY?</SlamTitle>
+      <p className="screen-subtitle">What do you believe this means?</p>
 
       <textarea
         value={data.s3text || ''}
         onChange={e => onChange('s3text', e.target.value)}
-        placeholder={"He's obviously out with someone else. Probably the same girl he swore was just a 'friend.' Men are all liars."}
+        placeholder="He's obviously out with someone else. Probably the same girl he swore was just a 'friend.'"
         rows={5}
       />
 
@@ -23,7 +26,7 @@ export default function Screen3({ data, onChange, onNext }) {
           <button
             key={t}
             type="button"
-            className={`feeling-tag ${(data.s3tags || []).includes(t) ? 'selected' : ''}`}
+            className={`feeling-tag${(data.s3tags || []).includes(t) ? ' selected' : ''}`}
             onClick={() => toggleTag(t)}
           >{t}</button>
         ))}

@@ -1,9 +1,11 @@
+import SlamTitle from '../components/SlamTitle.jsx';
+
 export default function Screen6({ reality, loading, error, onNext }) {
   return (
     <div className="screen">
-      <div className="screen-eyebrow">Reality check</div>
-      <div className="screen-title">Reality.</div>
-      <div className="screen-subtitle">What actually happened — no story, no spin.</div>
+      <div className="screen-eyebrow" style={{ color: 'var(--screen-accent)' }}>JUST THE FACTS</div>
+      <SlamTitle flashColor="rgba(40,65,110,0.3)">JUST THE FACTS.</SlamTitle>
+      <p className="screen-subtitle">What actually happened — no story, no spin.</p>
 
       {loading && (
         <div className="output-loading">
@@ -19,7 +21,7 @@ export default function Screen6({ reality, loading, error, onNext }) {
       )}
 
       {!loading && !error && reality && (
-        <button className="btn btn-primary" onClick={onNext}>Keep going →</button>
+        <button className="btn btn-primary" onClick={onNext}>Keep going</button>
       )}
     </div>
   );
